@@ -1,24 +1,44 @@
-(setq p1 (getpoint "\nУкажите центр окружности: "))
-(setq p2 (getpoint "\nУкажите любую точку на окружности"))
-(setq r1 (distance p1 p2))				; задать радиус окружности
-(setq p3 (polar p1 pi (+ r1 30)))			; начальная точка удлиннённой линии
-(setq p4 (polar p1 0 (+ r1 30)))			; конечная точка удлиннённой линии
-(command "_line" p3 p4 "")				; удлиннённая линия
-(command "_rotate" (entlast) "" p1 "_c" 90)		; поворот линии с копированием
+;;; Построение осевых линий поперечного разреза трубопровода
+(defun circle_axis (/ osm 3dosm obj prop cen r p1 p2)
+  
+  ;;; начало групповой отмены операций --------	;;;
+  (command "_UNDO" "_begin")			;;;
+  ;;; отключить привязки ----------------------	;;;
+  (setq osm (getvar "osmode")			;;;
+	3dosm (getvar "3dosmode"))		;;;
+  (setvar "osmode" 0)				;;;
+  (setvar "3dosmode" 0)				;;;
+  ;;; -----------------------------------------	;;;
 
-
-(defun c:ca (/ crcl cProp cntr_pnt rds p1 p2 p3 p4)
-  (setq crcl (car (entsel "\nВыберите окружность:")))
-  (setq cProp (entget crcl))
-  (if (not (= (cdr (assoc 0 cProp)) "CIRCLE"))
-    (alert "Выбрана не окружность")
+  (if (not (setq a (getint "\nУдлиннение оси за окружность: <30>")))
+    (setq a 30)
   ); end if
-  (setq cntr_pnt (cdr (assoc 10 cProp)))
-  (setq rds (cdr (assoc 40 cProp)))
-  (setq p1 (polar cntr_pnt pi (+ rds 30)))
-  (setq p2 (polar cntr_pnt 0 (+ rds 30)))
-  (entmake (list (cons 0 "line") (cons 10 p1) (cons 11 p2)))
-  (setq p3 (polar cntr_pnt (/ pi 2) (+ rds 30)))
-  (setq p4 (polar cntr_pnt (* 1.5 pi) (+ rds 30)))
-  (entmake (list (cons 0 "line") (cons 10 p3) (cons 11 p4)))
-); end
+
+  (setq obj (car (entsel "\nВыберите окружность:")))
+  (setq prop (entget obj))
+  (if (not (= (cdr (assoc 0 prop)) "CIRCLE"))
+    (alert "ОШИБКА: Выбрана не окружность!")
+  ); end if
+  
+  (setq cen (cdr (assoc 10 prop)))		; координаты центра окружности
+  (setq r (cdr (assoc 40 prop)))		; радиус окружности
+  (setq p1 (polar cen pi (+ r a)))		; начальная точка горизонтальной оси
+  (setq p2 (polar cen 0 (+ r a)))		; конечная точка горизонтальной оси
+  
+  (command "_LINE" p1 p2 "")			; строим горизонтальную ось
+  (command "_ROTATE" (entlast) "" cen "_c" 90)	; строим вертикальную ось
+    
+  ;;; вернуть привязки ------------------------	;;;
+  (setvar "osmode" osm)				;;;
+  (setvar "3dosmode" 3dosm)			;;;
+  ;;; конец групповой отмены операций ---------	;;;
+  (command "_UNDO" "_end")			;;;
+  ;;; -----------------------------------------	;;;
+  
+); end defun circle_axis
+
+
+
+(defun c:КРОСИ ()
+  (circle_axis)
+)
