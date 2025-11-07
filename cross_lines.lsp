@@ -20,16 +20,9 @@
 	  ep (polar cp (+ ang pi) rd)		; конечная точка дуги
     ); end setq
 
-    (princ "\ncp = ")
-    (princ cp)
-    (princ "\nsp = ")
-    (princ sp)
-    (princ "\nep = ")
-    (princ ep)
-    (princ "\n")
     (command "_ARC" "_c" cp sp ep)		; построить дугу по центральной точке, начальной точке и конечной точке
 ;;;    (command "_ARC" "_c" cp sp "_a" 180	; альтернативный вариант построения дуги - по центральной точке, начальной точке и углу
-    (command "_BREAK" ln "_f" sp ep)		; разорвать линию
+    (command "_BREAK" ln ;|"_f"|; sp ep)	; разорвать линию
 
     ;;; вернуть привязки ----------------------	;;;
     (setvar "osmode" osm)			;;;
