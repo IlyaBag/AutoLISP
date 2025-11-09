@@ -62,6 +62,78 @@
     ;;; ---------------------------------------	;;;
 
       );cond 'LIST
+
+      (
+       (and (= (type ln) 'LIST)
+	    (= (cdr (assoc 0 (entget (car ln)))) "LWPOLYLINE"))	; если выбран объект "LWPOLYLINE"
+
+       (setq ln   (car ln)
+	     prop (entget ln)
+	     cp   (getpoint "\n÷ентральна€ точка разрыва:"))
+       ;;; найти все вершины полилинии
+       (setq pts (vl-remove-if-not '(lambda (x) (= (car x) 10)) prop))
+       
+       (defun is_even (num)
+	 (= (rem num 2) 0)
+       );end defun is_even
+       
+       (if (not (is_even (cdr (assoc 70 prop))))	; если в dxf 70 есть битовый флаг 1 - замкнута€ полилини€
+	 (setq pts (append pts (list (car pts))))	; дублируем первую вершину в конце списка вершин
+       );end if
+       ;;; найти вершины, между которыми находитс€ заданна€ точка
+       (setq i 1)
+       (while (< i (length pts))
+	 (setq pt1 (cdr (nth (- i 1) pts))
+	       pt2 (cdr (nth i pts)))
+	 (if (BG:is_point_on_line pt1 pt2 cp)
+	   (progn
+	     (princ "\n")(princ pt1)(princ ", ")(princ cp)(princ ", ")(princ pt2)
+	     (setq i (+ (length pts) 1))	; выход из цикла при нахождении точки между вершинами (i > length pts)
+	   );end progn
+	   (setq i (1+ i))			; если цикл завершилс€ с i = length pts, значит заданна€ точка не лежит между вершинами
+	 );end if
+       );end while
+
+       (if (> i (length pts))			; если найдены нужные вершины полилинии
+	 ;;; if true
+	 (progn
+	   (setq ang  (angle pt1 pt2))		; угол разрываемого сегмента полилинии
+	   (if (and (> ang (/ pi 2))		; если угол > 90гр. и <= 270гр.
+		    (<= ang (* pi 1.5)))
+	     (setq ang (rem (+ ang pi) (* 2 pi)))	; увеличиваем угол на 180гр. и берем по модулю 360гр.
+	   );end if
+	   (setq sp (polar cp ang rd)		; начальна€ точка дуги
+		 ep (polar cp (+ ang pi) rd))	; конечна€ точка дуги
+
+	   ;;; начало групповой отмены операций ------	;;;
+	   (command "_UNDO" "_begin")			;;;
+	   ;;; отключить прив€зки --------------------	;;;
+	   (setq osm (getvar "osmode")			;;;
+		 3dosm (getvar "3dosmode"))		;;;
+	   (if (< osm 16384)				;;;
+	     (setvar "osmode" (+ osm 16384))		;;;
+	   )						;;;
+	   (setvar "3dosmode" 0)			;;;
+	   ;;; ---------------------------------------	;;;
+
+	   (command "_ARC" "_c" cp sp ep)	; построить дугу по центральной точке, начальной точке и конечной точке
+	   (setq entarc (entlast))
+	   (command "_BREAK" ln sp ep)		; разорвать полилинию
+	   (command "_JOIN" ln entarc (entlast) "")	; соединить разорванную полилинию с дугой
+
+	   ;;; вернуть прив€зки ----------------------	;;;
+	   (setvar "osmode" osm)			;;;
+	   (setvar "3dosmode" 3dosm)			;;;
+	   ;;; конец групповой отмены операций -------	;;;
+	   (command "_UNDO" "_end")			;;;
+	   ;;; ---------------------------------------	;;;
+	 );end progn
+
+	 ;;; if false
+	 (princ "\n”казанна€ точка не лежит на полилинии")
+       );end if
+       
+      );cond 'LWPOLYLINE
       
       (T
        (princ "\n„то-то пошло не так. ѕопробуем ещЄ разок...")
