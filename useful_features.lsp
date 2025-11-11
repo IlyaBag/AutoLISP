@@ -21,3 +21,35 @@
      (+ (distance pt1 pt3) (distance pt3 pt2))
   )
 )
+
+
+(defun BG:str-split (str sep / pos res)
+;;;  Разделяет строку на список подстрок по заданному разделителю.
+;;;  Возвращает nil если хотя бы один из аргументов не является строкой
+;;;  или в качестве разделителя передана пустая строка.
+;;;
+;;;  Аргументы:
+;;;    'str' - строка, которую нужно разделить
+;;;    'sep' - строка, являющаяся разделителем
+;;;
+;;;  (vl-string-search <образец> <строка> [<начальная позиция>]) -> индекс
+;;;  (substr <строка> <начальная позиция (нач. с 1)> [<длина подстроки>])
+
+  (cond
+    ( ;_ cond #1
+     (and (= (type str) 'STR)
+          (= (type sep) 'STR)
+          (/= sep "")
+     ) ;_ end and
+     (while (setq pos (vl-string-search sep str))
+       (setq res (append res (list (substr str 1 pos))))
+       (setq str (substr str (+ pos (strlen sep) 1)))
+     ) ;_ end while
+     (append res (list str))
+    )
+    ( ;_ cond T
+     T
+     nil
+    )
+  ) ;_ end cond
+) ;_ end defun
