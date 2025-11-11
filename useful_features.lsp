@@ -6,13 +6,18 @@
 )
 
 
+(defun is_even (num)
+  ;;; no comments
+  (= (rem num 2) 0)
+)
+
+
 (defun BG:is-point-on-line (pt1 pt2 pt3)
   ;;; pt1, pt2 - vertices of a line
   ;;; pt3 - point to check
   ;;; (BG:is-point-on-line '(0 0) '(2 2) '(1 1)) => T
   ;;; (BG:is-point-on-line '(0 0) '(2 2) '(1 0)) => nil
-  (=
-    (distance pt1 pt2)
-    (+ (distance pt1 pt3) (distance pt3 pt2))
+  (= (distance pt1 pt2)
+     (+ (distance pt1 pt3) (distance pt3 pt2))
   )
 )
