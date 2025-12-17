@@ -32,18 +32,22 @@
 
 
 (defun WD:relink-weld ()
+  (princ)
 )
 
 
 (defun WD:update-all-welds ()
+  (princ)
 )
 
 
 (defun WD:select-weld-blocks ()
+  (princ)
 )
 
 
 (defun WD:highlight-next ()
+  (princ)
 )
 
 
