@@ -19,6 +19,19 @@
 |;
 
 
+(defun _insert_block (blk_name)
+;;;  Получает имя блока, проверяет наличие определения такого блока и, при возможности,
+;;;  вставляет его экземпляр.
+;;;  Возвращает ссылку на объект вставленного блока или nil, если такой блок не определён.
+  (if (tblsearch "BLOCK" blk_name)
+    (progn
+      (command "_-INSERT" blk_name pause 1 1 0)  ; TODO: подавить возможность выбирать опции при вставке ("_CHANGE" <ename> ...)
+      (entlast)
+    ) ;_ end progn
+  ) ;_ end if
+) ;_ end defun
+
+
 (defun WD:add-weld (/ blk_name new_blk new_blk_handle)
 ;;;  вставить новый блок
 ;;;  получить его параметры: ссылку, метку
@@ -28,6 +41,15 @@
 ;;;  получить номер предыдущего шва
 ;;;  обновить атрибут нового блока
 ;;;  записать метку нового блока в общие данные
+  (setq blk_name "WELD_LEADER_1")  ; TODO: хранить имя блока в словаре
+  (setq blk_name "свар_шов_3")   ; удалить
+  (if (setq new_blk (_insert_block blk_name))
+    (setq new_blk_handle (cdr (assoc 5 (entget new_blk))))
+    (progn
+      (alert (strcat "ОШИБКА!\nБлок " blk_name " не определён"))
+      (exit)
+    )
+  )
 )
 
 
