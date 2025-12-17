@@ -62,7 +62,19 @@
 )
 
 
-(defun WD:add-weld (/ blk_name new_blk new_blk_handle)
+(defun _get-last-saved-handle ()
+;;;  Возвращает метку последнего включённого в цепочку блока сварного шва.
+  glob_lh
+)
+
+
+(defun _set-last-handle (hdl)
+;;;  Сохраняет переданную метку как метку последнего включённого в цепочку блока сварного шва.
+  (setq glob_lh hdl)
+)
+
+
+(defun WD:add-weld (/ blk_name new_blk new_blk_handle prev_blk)
 ;;;  вставить новый блок
 ;;;  получить его параметры: ссылку, метку
 ;;;  добавить ему xdata
@@ -83,6 +95,15 @@
   )
   ;; Создаём у блока расширенные данные с нулевой меткой следующего блока
   (_save-handle-to-xdata new_blk "WELD_SEAMS_150" "0")  ; TODO: хранить имя приложения в словаре
+  ;; Обновление расширенных данных предыдущего блока
+  (if glob_lh
+    (progn
+      (setq prev_blk (handent (_get-last-saved-handle)))  ; TODO: проверить на неудалённость
+      (_save-handle-to-xdata prev_blk "WELD_SEAMS_150" new_blk_handle)
+    )
+  )
+  ;; Сохранение метки нового блока как последнего в цепочке
+  (_set-last-handle new_blk_handle)
 )
 
 
