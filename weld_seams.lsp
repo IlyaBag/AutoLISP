@@ -74,7 +74,52 @@
 )
 
 
-(defun WD:add-weld (/ blk_name new_blk new_blk_handle prev_blk)
+(defun _get-block-attr (ent attr_name / prop is_found not_found)
+;;;  Ищет в блоке атрибут с заданным имененм и возвращает указатель атрибута. 
+;;;  Если атрибут не найден, возвращает nil.
+  (while (not (or is_found not_found))
+    (setq ent (entnext ent))                      ; TODO: entnext даёт ошибку, если ent - последний в базе
+    (setq prop (entget ent))
+    (cond
+      ;; cond - атрибут найден
+      ((and (= (cdr (assoc 0 prop)) "ATTRIB")
+            (= (cdr (assoc 2 prop)) attr_name)
+       ) ;_ end and
+       (setq is_found T)
+      )
+      ;; cond - атрибут с другим именем
+      ((= (cdr (assoc 0 prop)) "ATTRIB")
+      )
+      ;; cond - атрибут не найден
+      (T
+       (setq not_found T)
+      )
+    ) ;_ end cond
+  ) ;_ end while
+  (if is_found
+    ent
+    nil
+  ) ;_ end if
+) ;_ end defun
+
+
+(defun _get-attr-val (ent)
+;;;  Получает указатель атрибута блока и возвращает значение атрибута.
+  (cdr (assoc 1 (entget ent)))
+) ;_ end defun
+
+
+(defun _set-attr-val (ent val / prop)
+;;;  Устанавливает новое значение указанному атрибуту блока.
+  (setq prop (entget ent))
+  (entmod (subst (cons 1 val) (assoc 1 prop) prop))
+  (entupd (cdr (assoc 330 prop)))                 ; обновить блок, содержащий данный атрибут
+) ;_ end defun
+
+
+
+
+(defun WD:add-weld (/ blk_name new_blk new_blk_handle prev_blk prev_att prev_att_val new_att)
 ;;;  вставить новый блок
 ;;;  получить его параметры: ссылку, метку
 ;;;  добавить ему xdata
@@ -95,11 +140,17 @@
   )
   ;; Создаём у блока расширенные данные с нулевой меткой следующего блока
   (_save-handle-to-xdata new_blk "WELD_SEAMS_150" "0")  ; TODO: хранить имя приложения в словаре
-  ;; Обновление расширенных данных предыдущего блока
+  ;; Обновление расширенных данных предыдущего блока и получение его номера шва
   (if glob_lh
     (progn
       (setq prev_blk (handent (_get-last-saved-handle)))  ; TODO: проверить на неудалённость
       (_save-handle-to-xdata prev_blk "WELD_SEAMS_150" new_blk_handle)
+      (setq prev_att (_get-block-attr prev_blk "НОМЕР_СВ_ШВА")  ; TODO: хранить имя атрибута в словаре
+            prev_att_val (_get-attr-val prev_att)
+      )
+      ;; Обновление атрибута нового блока
+      (setq new_att (_get-block-attr new_blk "НОМЕР_СВ_ШВА"))  ; TODO: хранить имя атрибута в словаре
+      (_set-attr-val new_att (itoa (1+ (atoi prev_att_val))))  ; TODO: проверка типа атрибута
     )
   )
   ;; Сохранение метки нового блока как последнего в цепочке
