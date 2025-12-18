@@ -74,6 +74,18 @@
 )
 
 
+
+(defun _get-first-saved-handle ()
+;;;  Возвращает метку первого включённого в цепочку блока сварного шва.
+  glob_fh
+)
+
+
+(defun _set-first-handle (hdl)
+;;;  Сохраняет переданную метку как метку первого включённого в цепочку блока сварного шва.
+  (setq glob_fh hdl)
+)
+
 (defun _get-block-attr (ent attr_name / prop is_found not_found)
 ;;;  Ищет в блоке атрибут с заданным имененм и возвращает указатель атрибута. 
 ;;;  Если атрибут не найден, возвращает nil.
@@ -140,9 +152,9 @@
   )
   ;; Создаём у блока расширенные данные с нулевой меткой следующего блока
   (_save-handle-to-xdata new_blk "WELD_SEAMS_150" "0")  ; TODO: хранить имя приложения в словаре
-  ;; Обновление расширенных данных предыдущего блока и получение его номера шва
-  (if glob_lh
+  (if (_get-last-saved-handle)
     (progn
+      ;; Обновление расширенных данных предыдущего блока и получение его номера шва
       (setq prev_blk (handent (_get-last-saved-handle)))  ; TODO: проверить на неудалённость
       (_save-handle-to-xdata prev_blk "WELD_SEAMS_150" new_blk_handle)
       (setq prev_att (_get-block-attr prev_blk "НОМЕР_СВ_ШВА")  ; TODO: хранить имя атрибута в словаре
@@ -152,6 +164,8 @@
       (setq new_att (_get-block-attr new_blk "НОМЕР_СВ_ШВА"))  ; TODO: хранить имя атрибута в словаре
       (_set-attr-val new_att (itoa (1+ (atoi prev_att_val))))  ; TODO: проверка типа атрибута
     )
+    ;; Сохранение метки первого блока
+    (_set-first-handle new_blk_handle)
   )
   ;; Сохранение метки нового блока как последнего в цепочке
   (_set-last-handle new_blk_handle)
