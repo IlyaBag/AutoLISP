@@ -219,8 +219,24 @@
 
 
 (defun WD:select-weld-blocks ()
-  (princ)
-)
+;;;  Предоставляет пользователю возможность выбора в чертеже объектов блоков с фильтром по именем блока сварного шва.
+  (setq ss     (ssget '((0 . "INSERT") (2 . "`*U*,свар_шов_3"))) ; пользовательский выбор объектов
+        ssents (vl-remove-if 'listp (mapcar 'cadr (ssnamex ss))) ; получаем список указателей выбранных объектов
+        ssres  (ssadd)                            ; создаём пустой набор
+  ) ;_ end setq
+  (foreach elem ssents
+    (if
+      ;; если блок действительно имеет нужное название
+      (and (vlax-property-available-p (vlax-ename->vla-object elem) "effectivename")
+           (wcmatch (strcase (vla-get-effectivename (vlax-ename->vla-object elem)) t) "свар_шов_3")
+      ) ;_ end and
+      (ssadd elem ssres)
+    ) ;_ end if
+  ) ;_ end foreach
+  (sssetfirst nil ssres)
+) ;_ end defun
+
+
 
 
 (defun WD:highlight-next ()
