@@ -179,9 +179,18 @@
 )
 
 
-(defun WD:relink-weld ()
-  (princ)
-)
+(defun WD:relink-weld (/ fst_blk scd_blk number handle)
+;;;  Объединяет в цепочку два указанных блока:
+;;;  - записывает в расширенные данные первого блока метку второго,
+;;;  - обновляет номер шва второго блока на основании номера первого.
+  (setq fst_blk (car (entsel "Укажите первый блок: "))
+        scd_blk (car (entsel "Укажите второй блок: "))
+        number  (_get-attr-val (_get-block-attr fst_blk "НОМЕР_СВ_ШВА"))
+        handle  (cdr (assoc 5 (entget scd_blk)))
+  ) ;_ end setq
+  (_save-handle-to-xdata fst_blk "WELD_SEAMS_150" handle)
+  (_set-attr-val (_get-block-attr scd_blk "НОМЕР_СВ_ШВА") (itoa (1+ (atoi number))))
+) ;_ end defun
 
 
 (defun WD:update-all-welds ()
