@@ -193,9 +193,29 @@
 ) ;_ end defun
 
 
-(defun WD:update-all-welds ()
-  (princ)
-)
+(defun WD:update-all-welds (/ enough weld weld_att_val next_weld next_weld_hdl next_weld_att next_weld_xd_val)
+;;;  Обновление атрибутов блоков по всей цепочке относительно атрибута первого блока.
+  (if (setq next_weld_hdl (_get-first-saved-handle))
+    (progn
+      (while (not enough)
+        (setq weld             (handent next_weld_hdl)
+              weld_att_val     (_get-attr-val (_get-block-attr weld "НОМЕР_СВ_ШВА"))
+              next_weld_hdl    (_get-xdata-val weld "WELD_SEAMS_150" 1005)
+              next_weld        (handent next_weld_hdl)
+              next_weld_att    (_get-block-attr next_weld "НОМЕР_СВ_ШВА")
+              next_weld_xd_val (_get-xdata-val next_weld "WELD_SEAMS_150" 1005)
+        ) ;_ end setq
+        (_set-attr-val next_weld_att (itoa (1+ (atoi weld_att_val))))
+        (if (= next_weld_xd_val "0")
+          (setq enough T)
+        ) ;_ end if
+      ) ;_ end while
+    ) ;_ end progn
+    (alert "ОШИБКА!\nНачало цепочки блоков не задано")
+  ) ;_ end if
+) ;_ end defun
+
+
 
 
 (defun WD:select-weld-blocks ()
